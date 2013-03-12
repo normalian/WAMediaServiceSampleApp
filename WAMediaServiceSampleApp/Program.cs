@@ -1,6 +1,7 @@
 ﻿using System;
-using System.IO;
+using System.Configuration;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.WindowsAzure.MediaServices.Client;
 
@@ -8,13 +9,13 @@ namespace MediaConsoleApp
 {
     class Program
     {
-        //Media Service のアカウント名とキー名
-        private static string _accountName = "＜メディアサービスアカウント名＞";
-        private static string _accountKey = "＜メディアサービスキー名＞";
+        //Media Service のアカウント名とキー名 - App.config を編集してください
+        private static string _accountName = ConfigurationSettings.AppSettings["AccountName"];
+        private static string _accountKey = ConfigurationSettings.AppSettings["AccountKey"];
 
-        //適宜変更して欲しいパス名
-        private static string moviefilePath = @"＜動画のパス＞.mp4";
-        private static string urlfilePath = @"C:\Temp\SasUrlList.txt";
+        //適宜変更して欲しいパス名 - App.config を編集してください
+        private static string _moviefilePath = ConfigurationSettings.AppSettings["MovieFilePath"];
+        private static string _urlfilePath = ConfigurationSettings.AppSettings["UrlFilePath"];
 
         static void Main(string[] args)
         {
@@ -27,14 +28,14 @@ namespace MediaConsoleApp
 
             //① 動画のアップロード（※注 エンコード完了には時間がかかります）
             Console.WriteLine("①動画のアップロード～公開迄を実施");
-            UploadSimpleAsset(context, assetName, moviefilePath);
+            UploadSimpleAsset(context, assetName, _moviefilePath);
             EncodeSimpleAsset(context, assetName);
-            PublishSimpleAsset(context, assetName, urlfilePath);
+            PublishSimpleAsset(context, assetName, _urlfilePath);
 
             //② 既存のアセットに対するサムネイルの作成＆公開（※注 エンコード完了には時間がかかります）
             Console.WriteLine("②アップロードした動画からサムネイルを生成＆公開");
             CreateThumbnails(context, assetName);
-            PublishThumbnails(context, assetName, urlfilePath);
+            PublishThumbnails(context, assetName, _urlfilePath);
 
             Console.WriteLine("------------ Application End   ------------");
             Console.ReadLine();
