@@ -20,9 +20,9 @@ namespace MediaConsoleApp
         static void Main(string[] args)
         {
             //管理ポータルに表示される
-            string assetName = "某店舗動画";
+            string assetName = "新規の動画アセット";
 
-            Console.WriteLine("------------ Application Start ------------");
+            Console.WriteLine("------------ アプリケーション開始 ------------");
 
             CloudMediaContext context = new CloudMediaContext(_accountName, _accountKey);
 
@@ -37,7 +37,7 @@ namespace MediaConsoleApp
             CreateThumbnails(context, assetName);
             PublishThumbnails(context, assetName, _urlfilePath);
 
-            Console.WriteLine("------------ Application End   ------------");
+            Console.WriteLine("------------ アプリケーション終了   ------------");
             Console.ReadLine();
         }
 
@@ -72,7 +72,7 @@ namespace MediaConsoleApp
 
         private static void EncodeSimpleAsset(CloudMediaContext context, string assetName)
         {
-            var asset = context.Assets.Where(_ => _.Name == assetName).ToList()[0];
+            var asset = context.Assets.Where(_ => _.Name == assetName).ToList().ElementAt(0);
 
             //ジョブの作成
             Console.WriteLine("\tジョブの作成を開始");
@@ -93,7 +93,7 @@ namespace MediaConsoleApp
 
         private static void PublishSimpleAsset(CloudMediaContext context, string assetName, string urlfilePath)
         {
-            var asset = context.Assets.Where(_ => _.Name == assetName).ToList()[0];
+            var asset = context.Assets.Where(_ => _.Name == assetName).ToList().ElementAt(0);
 
             //一つのアセットに割り当てられるlocatorは10個までなので、古いlocator情報を削除
             Console.WriteLine("\t古いlocatorを削除");
@@ -128,7 +128,7 @@ namespace MediaConsoleApp
         private static void CreateThumbnails(CloudMediaContext context, string assetName)
         {
             //MediaService 制御用のコンテキスト作成
-            var asset = context.Assets.Where(_ => _.Name == assetName).ToList()[0];
+            var asset = context.Assets.Where(_ => _.Name == assetName).ToList().ElementAt(0);
 
             {
                 var job = context.Jobs.Create("サムネイル Encoding Job");
@@ -141,6 +141,7 @@ namespace MediaConsoleApp
                 task.OutputAssets.AddNew(assetName + " - サムネイルズ", AssetCreationOptions.None);
 
                 //このメソッドは同期だが、job の実行完了はまたない
+                Console.WriteLine("\tサムネイルのジョブを実行");
                 job.Submit();
             }
         }
@@ -148,16 +149,17 @@ namespace MediaConsoleApp
         //作成したサムネイルを公開
         private static void PublishThumbnails(CloudMediaContext context, string assetName, string urlfilePath)
         {
-            var asset = context.Assets.Where(_ => _.Name == assetName + @" - サムネイルズ").ToList()[0];
+            var asset = context.Assets.Where(_ => _.Name == assetName + @" - サムネイルズ").ToList().ElementAt(0);
 
             //Locator は 1アセットに10個までなので、古い Locator は削除する
-            Console.WriteLine("古いロケーターを削除");
+            Console.WriteLine("\t古いロケーターを削除");
             foreach (var oldlocator in asset.Locators)
             {
                 oldlocator.Delete();
             }
 
             //Locator に割り当てる公開用の情報を設定
+            Console.WriteLine("\tサムネイルの公開");
             IAccessPolicy accessPolicy =
                 context.AccessPolicies.Create("30日読みとり許可", TimeSpan.FromDays(30), AccessPermissions.Read);
             ILocator locator =
@@ -174,6 +176,7 @@ namespace MediaConsoleApp
                 fileSasUrlList.Add(sasUrl);
                 WriteToFile(outFilePath, sasUrl);
             }
+            Console.WriteLine("\t{0} ファイルに公開情報を格納", outFilePath);
         }
         #endregion
 
