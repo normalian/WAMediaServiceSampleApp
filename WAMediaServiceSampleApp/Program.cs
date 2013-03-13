@@ -10,12 +10,12 @@ namespace MediaConsoleApp
     class Program
     {
         //Media Service のアカウント名とキー名 - App.config を編集してください
-        private static string _accountName = ConfigurationSettings.AppSettings["AccountName"];
-        private static string _accountKey = ConfigurationSettings.AppSettings["AccountKey"];
+        private static string _accountName = ConfigurationManager.AppSettings["AccountName"];
+        private static string _accountKey = ConfigurationManager.AppSettings["AccountKey"];
 
         //適宜変更して欲しいパス名 - App.config を編集してください
-        private static string _moviefilePath = ConfigurationSettings.AppSettings["MovieFilePath"];
-        private static string _urlfilePath = ConfigurationSettings.AppSettings["UrlFilePath"];
+        private static string _moviefilePath = ConfigurationManager.AppSettings["MovieFilePath"];
+        private static string _urlfilePath = ConfigurationManager.AppSettings["UrlFilePath"];
 
         static void Main(string[] args)
         {
