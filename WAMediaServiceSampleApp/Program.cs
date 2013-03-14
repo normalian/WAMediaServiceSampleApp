@@ -72,7 +72,7 @@ namespace MediaConsoleApp
 
         private static void EncodeSimpleAsset(CloudMediaContext context, string assetName)
         {
-            var asset = context.Assets.Where(_ => _.Name == assetName).ToList().ElementAt(0);
+            var asset = context.Assets.Where(_ => _.Name == assetName).FirstOrDefault();
 
             //ジョブの作成
             Console.WriteLine("\tジョブの作成を開始");
@@ -93,7 +93,7 @@ namespace MediaConsoleApp
 
         private static void PublishSimpleAsset(CloudMediaContext context, string assetName, string urlfilePath)
         {
-            var asset = context.Assets.Where(_ => _.Name == assetName).ToList().ElementAt(0);
+            var asset = context.Assets.Where(_ => _.Name == assetName).FirstOrDefault();
 
             //一つのアセットに割り当てられるlocatorは10個までなので、古いlocator情報を削除
             Console.WriteLine("\t古いlocatorを削除");
@@ -128,7 +128,7 @@ namespace MediaConsoleApp
         private static void CreateThumbnails(CloudMediaContext context, string assetName)
         {
             //MediaService 制御用のコンテキスト作成
-            var asset = context.Assets.Where(_ => _.Name == assetName).ToList().ElementAt(0);
+            var asset = context.Assets.Where(_ => _.Name == assetName).FirstOrDefault();
 
             {
                 var job = context.Jobs.Create("サムネイル Encoding Job");
@@ -149,7 +149,7 @@ namespace MediaConsoleApp
         //作成したサムネイルを公開
         private static void PublishThumbnails(CloudMediaContext context, string assetName, string urlfilePath)
         {
-            var asset = context.Assets.Where(_ => _.Name == assetName + @" - サムネイルズ").ToList().ElementAt(0);
+            var asset = context.Assets.Where(_ => _.Name == assetName + @" - サムネイルズ").FirstOrDefault();
 
             //Locator は 1アセットに10個までなので、古い Locator は削除する
             Console.WriteLine("\t古いロケーターを削除");
