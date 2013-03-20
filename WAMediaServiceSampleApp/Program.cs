@@ -20,7 +20,7 @@ namespace MediaConsoleApp
         static void Main(string[] args)
         {
             //管理ポータルに表示される
-            string assetName = "新規の動画アセット";
+            string assetName = "新規動画アセット";
 
             Console.WriteLine("------------ アプリケーション開始 ------------");
 
@@ -79,12 +79,13 @@ namespace MediaConsoleApp
             var job = context.Jobs.Create("動画 Encoding Job");
             var task = job.Tasks.AddNew("動画 Encoding Task",
                 GetMediaProcessor("Windows Azure Media Encoder", context),
-                "H264 Broadband SD 4x3",
+                "VC1 Smooth Streaming 720p",
+                // サンプルは Smooth Streaming の動画をエンコード
                 // ここの引数を以下のMSDNを参考に変更することで、エンコードを変更可能
                 // http://msdn.microsoft.com/en-us/library/windowsazure/jj129582.aspx
                 TaskOptions.None);
             task.InputAssets.Add(asset);
-            task.OutputAssets.AddNew(assetName + " - H264 Broadband SD 4x3", AssetCreationOptions.None);
+            task.OutputAssets.AddNew(assetName + " - VC1 Smooth Streaming 720p", AssetCreationOptions.None);
 
             //ジョブの実行
             Console.WriteLine("\tジョブの実行");
@@ -93,32 +94,37 @@ namespace MediaConsoleApp
 
         private static void PublishSimpleAsset(CloudMediaContext context, string assetName, string urlfilePath)
         {
-            var asset = context.Assets.Where(_ => _.Name == assetName).FirstOrDefault();
+            // 表示用の動画ファイルのURL格納先
+            string outFilePath = Path.GetFullPath(urlfilePath);
+
+            // assetName で始まるアセットを取得
+            var assets = context.Assets.Where(_ => _.Name.StartsWith(assetName));
 
             //一つのアセットに割り当てられるlocatorは10個までなので、古いlocator情報を削除
             Console.WriteLine("\t古いlocatorを削除");
-            foreach (var oldlocator in asset.Locators)
+            foreach (var locator in assets.ToList().SelectMany(_ => _.Locators))
             {
-                oldlocator.Delete();
+                locator.Delete();
             }
 
             //Locator の割り当て
             Console.WriteLine("\t公開用Locatorの割り当て");
             IAccessPolicy accessPolicy =
                 context.AccessPolicies.Create("30日読みとり許可", TimeSpan.FromDays(30), AccessPermissions.Read);
-            ILocator locator =
-                context.Locators.CreateLocator(LocatorType.Sas, asset, accessPolicy, DateTime.UtcNow.AddDays(-1));
 
-            //表示用の動画ファイルのURL格納先
-            string outFilePath = Path.GetFullPath(urlfilePath);
-
-            //動画の公開 URL 一覧を取得する
-            List<String> fileSasUrlList = new List<String>();
-            foreach (IAssetFile file in asset.AssetFiles)
+            //locatorを割り当て、URLをファイルに出力する
+            foreach (var asset in assets)
             {
-                string sasUrl = BuildFileSasUrl(file, locator);
-                fileSasUrlList.Add(sasUrl);
-                WriteToFile(outFilePath, sasUrl);
+                ILocator locator =
+                    context.Locators.CreateLocator(LocatorType.Sas, asset, accessPolicy, DateTime.UtcNow.AddDays(-1));
+
+                List<String> fileSasUrlList = new List<String>();
+                foreach (IAssetFile file in asset.AssetFiles)
+                {
+                    string sasUrl = BuildFileSasUrl(file, locator);
+                    fileSasUrlList.Add(sasUrl);
+                    WriteToFile(outFilePath, sasUrl);
+                }
             }
         }
         #endregion
