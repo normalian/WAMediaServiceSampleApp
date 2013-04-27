@@ -105,11 +105,11 @@ namespace MediaConsoleApp
                     case JobState.Queued:
                     case JobState.Processing:
                         job = context.Jobs.Where(_ => _.Id == job.Id).FirstOrDefault();
-                        Console.WriteLine("ジョブ {0} at {1} を処理中...", job.Name, job.State);
+                        Console.WriteLine("★ジョブ：{0} at {1} を処理中...", job.Name, job.State);
                         Thread.Sleep(10000);
                         break;
                     case JobState.Finished:
-                        Console.WriteLine("ジョブ {0} の処理が完了", job.Name, job.State);
+                        Console.WriteLine("★ジョブ：{0} の処理が完了", job.Name, job.State);
                         isJobComplete = true;
                         break;
                 }
@@ -139,12 +139,23 @@ namespace MediaConsoleApp
             //locatorを割り当て、URLをファイルに出力する
             foreach (var asset in assets)
             {
-                ILocator locator =
-                    context.Locators.CreateLocator(LocatorType.Sas, asset, accessPolicy, DateTime.UtcNow.AddDays(-1));
-
                 List<String> fileSasUrlList = new List<String>();
                 foreach (IAssetFile file in asset.AssetFiles)
                 {
+                    ILocator locator = null;
+                    if (file.Name.ToLower().EndsWith(".ism"))
+                    {
+                        locator = context.Locators.CreateLocator(LocatorType.OnDemandOrigin, asset, accessPolicy, DateTime.UtcNow.AddDays(-1));
+                    }
+                    else if (file.Name.ToLower().EndsWith(".jpg") || file.Name.ToLower().EndsWith(".mp4"))
+                    {
+                        locator = context.Locators.CreateLocator(LocatorType.Sas, asset, accessPolicy, DateTime.UtcNow.AddDays(-1));
+                    }
+                    else
+                    {
+                        continue;
+                    }
+
                     string sasUrl = BuildFileSasUrl(file, locator);
                     fileSasUrlList.Add(sasUrl);
                     WriteToFile(outFilePath, sasUrl);
@@ -183,11 +194,11 @@ namespace MediaConsoleApp
                     case JobState.Queued:
                     case JobState.Processing:
                         job = context.Jobs.Where(_ => _.Id == job.Id).FirstOrDefault();
-                        Console.WriteLine("ジョブ {0} at {1} を処理中...", job.Name, job.State);
+                        Console.WriteLine("★ジョブ：{0} at {1} を処理中...", job.Name, job.State);
                         Thread.Sleep(10000);
                         break;
                     case JobState.Finished:
-                        Console.WriteLine("ジョブ {0} の処理が完了", job.Name, job.State);
+                        Console.WriteLine("★ジョブ：{0} の処理が完了", job.Name, job.State);
                         isJobComplete = true;
                         break;
                 }
@@ -253,16 +264,28 @@ namespace MediaConsoleApp
         static string BuildFileSasUrl(IAssetFile file, ILocator locator)
         {
             // locatorのパスを得るためには、SAS URL にファイル名を結合する
-            var uriBuilder = new UriBuilder(locator.Path);
-            uriBuilder.Path = uriBuilder.Path + "/" + file.Name;
-
-            //SAS URL を返す
-            return uriBuilder.Uri.AbsoluteUri;
+            if (file.Name.ToLower().EndsWith(".mp4") || file.Name.ToLower().EndsWith(".jpg"))
+            {
+                var uriBuilder = new UriBuilder(locator.Path);
+                uriBuilder.Path = uriBuilder.Path + "/" + file.Name;
+                //SAS URL を返す
+                return uriBuilder.Uri.AbsoluteUri;
+            }
+            else if (file.Name.ToLower().EndsWith(".ism"))
+            {
+                Uri smoothUri = new Uri(locator.Path + file.Name + "/Manifest");
+                return smoothUri.ToString();
+            }
+            return string.Empty;
         }
 
         //URL情報をはきだす
         static void WriteToFile(string outFilePath, string fileContent)
         {
+            if (string.IsNullOrWhiteSpace(fileContent))
+            {
+                return;
+            }
             StreamWriter sr = File.AppendText(outFilePath);
             sr.WriteLine(fileContent);
             sr.Close();
