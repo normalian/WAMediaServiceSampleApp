@@ -264,17 +264,16 @@ namespace MediaConsoleApp
         static string BuildFileSasUrl(IAssetFile file, ILocator locator)
         {
             // locatorのパスを得るためには、SAS URL にファイル名を結合する
-            if (file.Name.ToLower().EndsWith(".mp4") || file.Name.ToLower().EndsWith(".jpg"))
+            if (locator.Type == LocatorType.OnDemandOrigin)
+            {
+                return new Uri(locator.Path + file.Name + "/Manifest").ToString();
+            }
+            else if (locator.Type == LocatorType.None || locator.Type == LocatorType.Sas)
             {
                 var uriBuilder = new UriBuilder(locator.Path);
                 uriBuilder.Path = uriBuilder.Path + "/" + file.Name;
                 //SAS URL を返す
                 return uriBuilder.Uri.AbsoluteUri;
-            }
-            else if (file.Name.ToLower().EndsWith(".ism"))
-            {
-                Uri smoothUri = new Uri(locator.Path + file.Name + "/Manifest");
-                return smoothUri.ToString();
             }
             return string.Empty;
         }
