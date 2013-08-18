@@ -105,11 +105,11 @@ namespace MediaConsoleApp
                     case JobState.Queued:
                     case JobState.Processing:
                         job = context.Jobs.Where(_ => _.Id == job.Id).FirstOrDefault();
-                        Console.WriteLine("★ジョブ：{0} at {1} を処理中...", job.Name, job.State);
+                        Console.WriteLine("★ジョブ名={0}, 状態={1}", job.Name, job.State);
                         Thread.Sleep(10000);
                         break;
                     case JobState.Finished:
-                        Console.WriteLine("★ジョブ：{0} の処理が完了", job.Name, job.State);
+                        Console.WriteLine("★ジョブ名={0}, 状態={1}", job.Name, job.State);
                         isJobComplete = true;
                         break;
                 }
@@ -194,11 +194,11 @@ namespace MediaConsoleApp
                     case JobState.Queued:
                     case JobState.Processing:
                         job = context.Jobs.Where(_ => _.Id == job.Id).FirstOrDefault();
-                        Console.WriteLine("★ジョブ：{0} at {1} を処理中...", job.Name, job.State);
+                        Console.WriteLine("★ジョブ名={0}, 状態={1}", job.Name, job.State);
                         Thread.Sleep(10000);
                         break;
                     case JobState.Finished:
-                        Console.WriteLine("★ジョブ：{0} の処理が完了", job.Name, job.State);
+                        Console.WriteLine("★ジョブ名={0}, 状態={1}", job.Name, job.State);
                         isJobComplete = true;
                         break;
                 }
