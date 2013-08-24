@@ -11,17 +11,17 @@ namespace MediaConsoleApp
 {
     class Program
     {
-        //Media Service のアカウント名とキー名 - App.config を編集してください
+        //メディアサービスのアカウント名とキー名 - App.config を編集してください
         private static string _accountName = ConfigurationManager.AppSettings["AccountName"];
         private static string _accountKey = ConfigurationManager.AppSettings["AccountKey"];
 
-        //適宜変更して欲しいパス名 - App.config を編集してください
+        //動画ファイルパス、動画公開URLを記載するファイルパス - App.config を編集してください
         private static string _moviefilePath = ConfigurationManager.AppSettings["MovieFilePath"];
         private static string _urlfilePath = ConfigurationManager.AppSettings["UrlFilePath"];
 
         static void Main(string[] args)
         {
-            //管理ポータルに表示される
+            //管理ポータルに表示されるアセット名を指定します
             string assetName = "新規動画アセット";
 
             Console.WriteLine("------------ アプリケーション開始 ------------");
@@ -36,7 +36,7 @@ namespace MediaConsoleApp
 
             Console.WriteLine("");
 
-            //② 既存のアセットに対するサムネイルの作成＆公開（※注 エンコード完了には時間がかかります）
+            //② 既存のアセットに対するサムネイルの作成＆公開します（※注 エンコード完了には時間がかかります）
             Console.WriteLine("②アップロードした動画からサムネイルを生成と公開を実施");
             EncodeToThumbnails(context, assetName);
             PublishThumbnails(context, assetName, _urlfilePath);
@@ -55,7 +55,7 @@ namespace MediaConsoleApp
             // ファイル名からアセットファイルを作成する
             var assetFile = asset.AssetFiles.Create(Path.GetFileName(moviefilePath));
 
-            // アップロード進捗を確認するためのハンドラ追加
+            // アップロード進捗を確認するためのハンドラを追加する
             assetFile.UploadProgressChanged += (sender, e) =>
                 Console.WriteLine("★ {0}% uploaded. {1}/{2} bytes",
                 e.Progress,
@@ -63,14 +63,13 @@ namespace MediaConsoleApp
                 e.TotalBytes);
 
             Console.WriteLine("アップロード開始");
-            //アップロードのメソッドは非同期版(UploadAsync)も存在
             assetFile.Upload(moviefilePath);
             Console.WriteLine("アップロード終了");
         }
 
         static void AssetFile_UploadProgressChanged(object sender, UploadProgressChangedEventArgs e)
         {
-            //現在のファイルアップロード状況を確認
+            //現在のファイルアップロード状況を出力します
             Console.WriteLine("★{1}/{2} bytes の {0}% アップロード ", e.Progress, e.BytesUploaded, e.TotalBytes);
         }
 
@@ -84,18 +83,18 @@ namespace MediaConsoleApp
             var task = job.Tasks.AddNew("動画 Encoding Task",
                 GetMediaProcessor("Windows Azure Media Encoder", context),
                 "VC1 Smooth Streaming 720p",
-                // サンプルは Smooth Streaming の動画をエンコード
-                // ここの引数を以下のMSDNを参考に変更することで、エンコードを変更可能
+                // サンプルは Smooth Streaming の動画をエンコードする
+                // 引数を以下のMSDNを参考に変更することで、他の形式の動画ファイルにエンコードを変更可能
                 // http://msdn.microsoft.com/en-us/library/windowsazure/jj129582.aspx
                 TaskOptions.None);
             task.InputAssets.Add(asset);
             task.OutputAssets.AddNew(assetName + " - VC1 Smooth Streaming 720p", AssetCreationOptions.None);
 
-            //ジョブの実行
+            //ジョブを実行します
             Console.WriteLine("ジョブの実行");
             job.Submit();
 
-            //ジョブの処理中は待つ
+            //ジョブの処理中のステータスを出力します。
             bool isJobComplete = false;
             while (isJobComplete == false)
             {
@@ -114,14 +113,16 @@ namespace MediaConsoleApp
                         break;
                 }
             }
+            // ジョブの実行待ちは以下のコードでも可能だが、ジョブの状態は確認できないため用途に応じて利用して下さい
+            // job.GetExecutionProgressTask(CancellationToken.None).Wait();
         }
 
         private static void PublishSimpleAsset(CloudMediaContext context, string assetName, string urlfilePath)
         {
-            // 表示用の動画ファイルのURL格納先
+            // 動画ファイルの公開URLを記載するファイル尾w指定します
             string outFilePath = Path.GetFullPath(urlfilePath);
 
-            // assetName で始まるアセットを取得
+            // assetName で始まるアセットを取得します
             var assets = context.Assets.Where(_ => _.Name.StartsWith(assetName));
 
             //一つのアセットに割り当てられるlocatorは10個までなので、古いlocator情報を削除
@@ -131,12 +132,12 @@ namespace MediaConsoleApp
                 locator.Delete();
             }
 
-            //Locator の割り当て
+            //公開用 Locator の割り当て
             Console.WriteLine("公開用Locatorの割り当て");
             IAccessPolicy accessPolicy =
                 context.AccessPolicies.Create("30日読みとり許可", TimeSpan.FromDays(30), AccessPermissions.Read);
 
-            //locatorを割り当て、URLをファイルに出力する
+            //公開用 locator を動画に割り当て、公開した動画のURLをファイルに出力する
             foreach (var asset in assets)
             {
                 List<String> fileSasUrlList = new List<String>();
