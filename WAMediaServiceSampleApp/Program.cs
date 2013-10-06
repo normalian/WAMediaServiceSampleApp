@@ -11,11 +11,11 @@ namespace MediaConsoleApp
 {
     class Program
     {
-        //メディアサービスのアカウント名とキー名 - App.config を編集してください
+        // メディアサービスのアカウント名とキー名 - App.config を編集してください
         private static string _accountName = ConfigurationManager.AppSettings["AccountName"];
         private static string _accountKey = ConfigurationManager.AppSettings["AccountKey"];
 
-        //動画ファイルパス、動画公開URLを記載するファイルパス - App.config を編集してください
+        // 動画ファイルパス、動画公開URLを記載するファイルパス - App.config を編集してください
         private static string _moviefilePath = ConfigurationManager.AppSettings["MovieFilePath"];
         private static string _urlfilePath = ConfigurationManager.AppSettings["UrlFilePath"];
 
@@ -48,14 +48,14 @@ namespace MediaConsoleApp
         #region 動画アップロード → 公開までのサンプルコード
         private static void UploadSimpleAsset(CloudMediaContext context, string assetName, string moviefilePath)
         {
-            // アセットのインスタンスを作成、ストレージ暗号化はしない
+            // アセットのインスタンスを作成時、ストレージ暗号化はしません
             var asset = context.Assets.Create(assetName,
                 AssetCreationOptions.None);
 
-            // 作成したアセットに格納するアセットファイルをファイル名から作成する
+            // 作成したアセットに格納するアセット・ファイルをファイル名から作成します
             var assetFile = asset.AssetFiles.Create(Path.GetFileName(moviefilePath));
 
-            // アップロード進捗を確認するためのハンドラを追加する
+            // アップロード進捗（しんちょく）を確認するためのハンドラを追加します
             assetFile.UploadProgressChanged += (sender, e) =>
                 Console.WriteLine("★ {0}% uploaded. {1}/{2} bytes",
                 e.Progress,
@@ -69,7 +69,7 @@ namespace MediaConsoleApp
 
         static void AssetFile_UploadProgressChanged(object sender, UploadProgressChangedEventArgs e)
         {
-            //現在のファイルアップロード状況を出力します
+            // 現在のファイル・アップロード状況を出力します
             Console.WriteLine("★{1}/{2} bytes の {0}% アップロード ", e.Progress, e.BytesUploaded, e.TotalBytes);
         }
 
@@ -77,24 +77,24 @@ namespace MediaConsoleApp
         {
             var asset = context.Assets.Where(_ => _.Name == assetName).FirstOrDefault();
 
-            //ジョブの作成
+            // ジョブの作成
             Console.WriteLine("ジョブの作成を開始");
             var job = context.Jobs.Create("動画 Encoding Job");
             var task = job.Tasks.AddNew("動画 Encoding Task",
                 GetMediaProcessor("Windows Azure Media Encoder", context),
                 "VC1 Smooth Streaming 720p",
                 // サンプルは Smooth Streaming の動画をエンコードする
-                // 引数を以下のMSDNを参考に変更することで、他の形式の動画ファイルにエンコードを変更可能
+                // 引数を以下のMSDNを参考に変更することで、ほかの形式の動画ファイルにエンコードを変更可能
                 // http://msdn.microsoft.com/en-us/library/windowsazure/jj129582.aspx
                 TaskOptions.None);
             task.InputAssets.Add(asset);
             task.OutputAssets.AddNew(assetName + " - VC1 Smooth Streaming 720p", AssetCreationOptions.None);
 
-            //ジョブを実行します
+            // ジョブを実行します
             Console.WriteLine("ジョブの実行");
             job.Submit();
 
-            //ジョブの処理中のステータスを出力します。
+            // ジョブの処理中のステータスを出力します。
             bool isJobComplete = false;
             while (isJobComplete == false)
             {
@@ -125,19 +125,19 @@ namespace MediaConsoleApp
             // assetName で始まるアセットを取得します
             var assets = context.Assets.Where(_ => _.Name.StartsWith(assetName));
 
-            //一つのアセットに割り当てられるロケータは10個までなので、古いロケータ情報を削除
+            // 1つのアセットに割り当てられるロケータは10個までなので、古いロケーター情報を削除します
             Console.WriteLine("古いlocatorを削除");
             foreach (var locator in assets.ToList().SelectMany(_ => _.Locators))
             {
                 locator.Delete();
             }
 
-            //公開用ロケータの割り当て
+            // 公開用ロケーターを割り当てます
             Console.WriteLine("公開用Locatorの割り当て");
             IAccessPolicy accessPolicy =
                 context.AccessPolicies.Create("30日読みとり許可", TimeSpan.FromDays(30), AccessPermissions.Read);
 
-            //公開用ロケータを動画に割り当て、公開した動画のURLをファイルに出力する
+            // 公開用ロケーターを動画に割り当て、公開した動画のURLをファイルに出力します
             foreach (var asset in assets)
             {
                 List<String> fileSasUrlList = new List<String>();
