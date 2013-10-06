@@ -28,7 +28,7 @@ namespace MediaConsoleApp
 
             CloudMediaContext context = new CloudMediaContext(_accountName, _accountKey);
 
-            //① 動画のアップロード（※注 エンコード完了には時間がかかります）
+            //① 動画をアップロードし、エンコードした後に公開します（※注 エンコード完了には時間がかかります）
             Console.WriteLine("①動画のアップロード～公開迄を実施");
             UploadSimpleAsset(context, assetName, _moviefilePath);
             EncodeSimpleAsset(context, assetName);
@@ -36,10 +36,10 @@ namespace MediaConsoleApp
 
             Console.WriteLine("");
 
-            //② 既存のアセットに対するサムネイルの作成＆公開します（※注 エンコード完了には時間がかかります）
-            Console.WriteLine("②アップロードした動画からサムネイルを生成と公開を実施");
-            EncodeToThumbnails(context, assetName);
-            PublishThumbnails(context, assetName, _urlfilePath);
+            //② 動画に対するサムネイルを作成し、公開します（※注 エンコード完了には時間がかかります）
+            // Console.WriteLine("②アップロードした動画からサムネイルを生成と公開を実施");
+            // EncodeToThumbnails(context, assetName);
+            // PublishThumbnails(context, assetName, _urlfilePath);
 
             Console.WriteLine("------------ アプリケーション終了   ------------");
             Console.ReadLine();
@@ -52,7 +52,7 @@ namespace MediaConsoleApp
             var asset = context.Assets.Create(assetName,
                 AssetCreationOptions.None);
 
-            // ファイル名からアセットファイルを作成する
+            // 作成したアセットに格納するアセットファイルをファイル名から作成する
             var assetFile = asset.AssetFiles.Create(Path.GetFileName(moviefilePath));
 
             // アップロード進捗を確認するためのハンドラを追加する
@@ -119,25 +119,25 @@ namespace MediaConsoleApp
 
         private static void PublishSimpleAsset(CloudMediaContext context, string assetName, string urlfilePath)
         {
-            // 動画ファイルの公開URLを記載するファイル尾w指定します
+            // 動画ファイルの公開URLを記載するファイルを指定します
             string outFilePath = Path.GetFullPath(urlfilePath);
 
             // assetName で始まるアセットを取得します
             var assets = context.Assets.Where(_ => _.Name.StartsWith(assetName));
 
-            //一つのアセットに割り当てられるlocatorは10個までなので、古いlocator情報を削除
+            //一つのアセットに割り当てられるロケータは10個までなので、古いロケータ情報を削除
             Console.WriteLine("古いlocatorを削除");
             foreach (var locator in assets.ToList().SelectMany(_ => _.Locators))
             {
                 locator.Delete();
             }
 
-            //公開用 Locator の割り当て
+            //公開用ロケータの割り当て
             Console.WriteLine("公開用Locatorの割り当て");
             IAccessPolicy accessPolicy =
                 context.AccessPolicies.Create("30日読みとり許可", TimeSpan.FromDays(30), AccessPermissions.Read);
 
-            //公開用 locator を動画に割り当て、公開した動画のURLをファイルに出力する
+            //公開用ロケータを動画に割り当て、公開した動画のURLをファイルに出力する
             foreach (var asset in assets)
             {
                 List<String> fileSasUrlList = new List<String>();
@@ -261,10 +261,10 @@ namespace MediaConsoleApp
             return processor;
         }
 
-        //Locator の割り当てたURLを取得する
+        //ロケータの割り当てたURLを取得する
         static string BuildFileSasUrl(IAssetFile file, ILocator locator)
         {
-            // locatorのパスを得るためには、SAS URL にファイル名を結合する
+            // ロケータのパスを得るため、SAS URL にファイル名を結合する
             if (locator.Type == LocatorType.OnDemandOrigin)
             {
                 return new Uri(locator.Path + file.Name + "/Manifest").ToString();
@@ -279,7 +279,7 @@ namespace MediaConsoleApp
             return string.Empty;
         }
 
-        //URL情報をはきだす
+        //URL情報をファイルに出力する
         static void WriteToFile(string outFilePath, string fileContent)
         {
             if (string.IsNullOrWhiteSpace(fileContent))
